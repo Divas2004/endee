@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endee Movie Recommender</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <span class="logo">E</span> Endee Recommender
+            </div>
+            <h1>Semantic Movie Search</h1>
+            <p>Describe what you want to watch, and we'll find the closest semantic matches using the Endee Vector Database.</p>
+        </header>
+
+        <main>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="e.g., A sci-fi movie about time travel and saving the world" autocomplete="off" />
+                <button id="searchBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+            
+            <div id="loader" class="loader hidden"></div>
+
+            <div class="results" id="resultsContainer">
+                <!-- Results will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loader = document.getElementById('loader');
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Show loader and clear old results
+            resultsContainer.innerHTML = '';
+            loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, top_k: 6 })
+                });
+
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    renderResults(data.results);
+                } else {
+                    resultsContainer.innerHTML = '<div class="no-results">No movies found. Try another query.</div>';
+                }
+            } catch (error) {
+                console.error("Search failed:", error);
+                resultsContainer.innerHTML = `<div class="error">An error occurred: ${error.message}</div>`;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function renderResults(results) {
+            resultsContainer.innerHTML = results.map(movie => `
+                <div class="movie-card">
+                    <div class="movie-header">
+                        <h2>${movie.title}</h2>
+                        <span class="score">${(movie.similarity * 100).toFixed(1)}% Match</span>
+                    </div>
+                    <div class="meta">
+                        <span class="year">${movie.release_date ? movie.release_date.split('-')[0] : 'N/A'}</span>
+                        <span class="rating">⭐ ${movie.vote_average.toFixed(1)}</span>
+                    </div>
+                    <div class="genres">${movie.genres.split('|').slice(0, 3).map(g => `<span class="tag">${g}</span>`).join('')}</div>
+                    <p class="overview">${movie.overview}</p>
+                </div>
+            `).join('');
+            
+            // Add staggered animation entrance
+            const cards = document.querySelectorAll('.movie-card');
+            cards.forEach((card, i) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, i * 100);
+            });
+        }
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    </script>
+</body>
+</html>

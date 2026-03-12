@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+endee
+sentence-transformers
+datasets
+torch
+jinja2
