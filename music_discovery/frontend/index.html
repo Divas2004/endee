@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discover music by mood, vibe, and feeling — powered by Endee Vector Database and semantic AI search.">
+    <title>Music Discovery Engine — AI-Powered Mood Search</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+</head>
+<body>
+
+<!-- ── Animated Background ─────────────────────────────────────────────── -->
+<div class="bg-animation">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+</div>
+
+<!-- ── Main Content ────────────────────────────────────────────────────── -->
+<div class="container">
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="logo">
+            <span class="logo-icon">🎵</span>
+        </div>
+        <h1>Music Discovery Engine</h1>
+        <p class="subtitle">Describe a mood, scene, or vibe — and discover the perfect tracks</p>
+        <div class="powered-by">
+            ⚡ Powered by <span>Endee Vector DB</span> + Semantic AI
+        </div>
+    </header>
+
+    <!-- Search -->
+    <section class="search-section">
+        <div class="search-bar" id="searchBar">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Try: driving through rain at night, cozy morning coffee, epic boss fight..."
+                autocomplete="off"
+            >
+            <button class="search-btn" id="searchBtn" onclick="performSearch()">Discover</button>
+        </div>
+
+        <!-- Hybrid Filters -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label>Genre</label>
+                <select id="genreFilter" onchange="performSearch()">
+                    <option value="">All Genres</option>
+                    <option value="Lo-fi">Lo-fi</option>
+                    <option value="Synthwave">Synthwave</option>
+                    <option value="Electronic">Electronic</option>
+                    <option value="Ambient">Ambient</option>
+                    <option value="Classical">Classical</option>
+                    <option value="Rock">Rock</option>
+                    <option value="Jazz">Jazz</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Era</label>
+                <select id="eraFilter" onchange="performSearch()">
+                    <option value="">All Eras</option>
+                    <option value="1980s">1980s</option>
+                    <option value="1990s">1990s</option>
+                    <option value="2000s">2000s</option>
+                    <option value="2010s">2010s</option>
+                    <option value="2020s">2020s</option>
+                </select>
+            </div>
+            <button class="reset-filters" onclick="resetFilters()">Reset</button>
+        </div>
+    </section>
+
+    <!-- Mood Presets -->
+    <section class="mood-presets" id="moodPresets">
+        <button class="mood-btn" onclick="searchMood('chill lo-fi beats for a rainy evening at home')">
+            <span class="mood-emoji">🌧️</span> Rainy Evening
+        </button>
+        <button class="mood-btn" onclick="searchMood('driving through the city at night with neon lights')">
+            <span class="mood-emoji">🌃</span> Night Drive
+        </button>
+        <button class="mood-btn" onclick="searchMood('high energy workout pump up aggressive')">
+            <span class="mood-emoji">💪</span> Workout Energy
+        </button>
+        <button class="mood-btn" onclick="searchMood('romantic slow dance intimate evening')">
+            <span class="mood-emoji">💕</span> Romantic Night
+        </button>
+        <button class="mood-btn" onclick="searchMood('deep focus study concentration productivity')">
+            <span class="mood-emoji">🧠</span> Deep Focus
+        </button>
+        <button class="mood-btn" onclick="searchMood('summer beach party tropical celebration')">
+            <span class="mood-emoji">🎉</span> Party Mode
+        </button>
+        <button class="mood-btn" onclick="searchMood('sad melancholy emotional crying')">
+            <span class="mood-emoji">😢</span> In My Feels
+        </button>
+        <button class="mood-btn" onclick="searchMood('epic adventure exploration nature mountains')">
+            <span class="mood-emoji">🏔️</span> Adventure
+        </button>
+        <button class="mood-btn" onclick="searchMood('peaceful meditation yoga zen calm')">
+            <span class="mood-emoji">🧘</span> Zen Mode
+        </button>
+        <button class="mood-btn" onclick="searchMood('retro gaming 8-bit cyberpunk futuristic')">
+            <span class="mood-emoji">🎮</span> Gaming
+        </button>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar" id="statsBar">
+        <div class="stat-item">
+            <span>🎶</span>
+            <span>Tracks indexed:</span>
+            <span class="stat-value" id="totalTracks">—</span>
+        </div>
+        <div class="stat-item">
+            <span>🧠</span>
+            <span>Model:</span>
+            <span class="stat-value" id="modelName">all-MiniLM-L6-v2</span>
+        </div>
+        <div class="stat-item">
+            <span>📐</span>
+            <span>Dimensions:</span>
+            <span class="stat-value">384</span>
+        </div>
+    </section>
+
+    <!-- Results Area -->
+    <main id="resultsArea"></main>
+
+    <!-- Spotify Integration -->
+    <section id="spotifySection" class="spotify-section" style="display: none;">
+        <h2 class="section-title">🎧 Listen on Spotify</h2>
+        <div id="spotifyPlayerContainer" class="spotify-player-container"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>
+            Music Discovery Engine — Built with
+            <a href="https://github.com/endee-io/endee" target="_blank">Endee Vector Database</a>
+            &amp; Sentence Transformers
+        </p>
+    </footer>
+</div>
+
+<!-- ── Audio Player Bar ────────────────────────────────────────────────── -->
+<div class="audio-player-bar" id="audioPlayerBar">
+    <div class="player-container">
+        <div class="player-info">
+            <div class="now-playing-img">🎵</div>
+            <div class="now-playing-meta">
+                <div class="now-playing-title" id="playerTitle">Select a track to play</div>
+                <div class="now-playing-artist" id="playerArtist">—</div>
+            </div>
+        </div>
+        
+        <div class="player-controls">
+            <div class="control-buttons">
+                <button class="control-btn" id="prevBtn" onclick="playPrevious()">⏮️</button>
+                <button class="control-btn play-pause-btn" id="mainPlayPauseBtn" onclick="togglePlayback()">▶️</button>
+                <button class="control-btn" id="nextBtn" onclick="playNext()">⏭️</button>
+            </div>
+            <div class="progress-container">
+                <span class="time" id="currentTime">0:00</span>
+                <div class="progress-bar" id="progressBar" onclick="seek(event)">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="time" id="duration">0:00</span>
+            </div>
+        </div>
+        
+        <div class="player-volume">
+            <span>🔊</span>
+            <input type="range" min="0" max="1" step="0.01" value="1" id="volumeSlider" oninput="audio.volume = this.value">
+        </div>
+    </div>
+</div>
+
+<audio id="mainAudio" preload="auto" ontimeupdate="updateProgress()" onended="playNext()"></audio>
+
+<!-- ── Playlist Panel ──────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="togglePlaylist()"></div>
+<div class="playlist-panel" id="playlistPanel">
+    <div class="playlist-header">
+        <h3>🎧 My Playlist <span class="track-count" id="playlistCount">0</span></h3>
+        <button class="playlist-close" onclick="togglePlaylist()">✕</button>
+    </div>
+    <div class="playlist-tracks" id="playlistTracks">
+        <div class="playlist-empty" id="playlistEmpty">
+            <div class="empty-icon">🎧</div>
+            <p>Your playlist is empty.<br>Add tracks from the search results!</p>
+        </div>
+    </div>
+    <div class="playlist-footer">
+        <button class="playlist-clear" onclick="clearPlaylist()">🗑️ Clear Playlist</button>
+    </div>
+</div>
+
+<!-- Playlist Toggle FAB -->
+<button class="playlist-toggle" id="playlistToggle" onclick="togglePlaylist()">
+    🎧
+    <span class="badge" id="playlistBadge"></span>
+</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ── JavaScript ──────────────────────────────────────────────────────── -->
+<script>
+    // ── State ─────────────────────────────────────────────────────────────
+    let playlist = [];
+    let currentResults = [];
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchStats();
+
+        // Enter key triggers search
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    });
+
+    // ── Fetch stats ───────────────────────────────────────────────────────
+    async function fetchStats() {
+        try {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            document.getElementById('totalTracks').textContent = data.total_tracks || '—';
+        } catch (e) {
+            console.error('Stats fetch error:', e);
+        }
+    }
+
+    // ── Search ────────────────────────────────────────────────────────────
+    async function performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+
+        // Collect filters
+        const genre = document.getElementById('genreFilter').value;
+        const era = document.getElementById('eraFilter').value;
+        
+        const filters = {};
+        if (genre) filters.genre = genre;
+        if (era) filters.year = era; // Our data stores era in year field for demo
+
+        const area = document.getElementById('resultsArea');
+        area.innerHTML = `
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Searching through the vibes...</p>
+            </div>
+        `;
+
+        try {
+            const res = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    query, 
+                    top_k: 8,
+                    filters: Object.keys(filters).length > 0 ? filters : null
+                }),
+            });
+            const data = await res.json();
+            currentResults = data.results || [];
+            renderResults(currentResults, query);
+            fetchSpotifySearch(query);
+        } catch (e) {
+            area.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Connection Error</h3>
+                    <p>Could not connect to the server. Make sure Endee and the API are running.</p>
+                </div>
+            `;
+        }
+    }
+
+    // ── Spotify Search ────────────────────────────────────────────────────
+    async function fetchSpotifySearch(query) {
+        const section = document.getElementById('spotifySection');
+        const container = document.getElementById('spotifyPlayerContainer');
+        if (!section || !container) return;
+        
+        try {
+            const res = await fetch('/api/spotify-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query }),
+            });
+            const data = await res.json();
+            
+            if (data.spotify_url) {
+                section.style.display = 'block';
+                container.innerHTML = `
+                    <div class="spotify-link-card">
+                        <p>Want more tracks like this? Open the full vibe on Spotify.</p>
+                        <a href="${data.spotify_url}" target="_blank" class="spotify-btn">
+                            <span class="spotify-icon"></span>
+                            Open "${escapeHtml(query)}" on Spotify
+                        </a>
+                    </div>
+                `;
+            } else {
+                section.style.display = 'none';
+            }
+        } catch (e) {
+            console.error('Spotify search fetch error:', e);
+            section.style.display = 'none';
+        }
+    }
+
+    // ── Reset Filters ─────────────────────────────────────────────────────
+    function resetFilters() {
+        document.getElementById('genreFilter').value = "";
+        document.getElementById('eraFilter').value = "";
+        performSearch();
+    }
+
+    // ── Mood preset search ────────────────────────────────────────────────
+    function searchMood(query) {
+        document.getElementById('searchInput').value = query;
+        performSearch();
+    }
+
+    // ── Render results ────────────────────────────────────────────────────
+    function renderResults(results, query, isSimilar = false) {
+        const area = document.getElementById('resultsArea');
+
+        if (!results || results.length === 0) {
+            area.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔇</div>
+                    <h3>No tracks found</h3>
+                    <p>Try a different mood or description to discover music.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const headerText = isSimilar
+            ? `<span>🔗</span> Similar to <span class="query-text">"${escapeHtml(query)}"</span>`
+            : `<span>✨</span> Results for <span class="query-text">"${escapeHtml(query)}"</span>`;
+
+        let html = `
+            <div class="section-header">
+                <h2>${headerText}</h2>
+                <span class="result-count">${results.length} tracks</span>
+            </div>
+            <div class="results-grid">
+        `;
+
+        results.forEach((track, i) => {
+            const simClass = track.similarity >= 70 ? 'high' : track.similarity >= 40 ? 'medium' : 'low';
+            const inPlaylist = playlist.some(p => p.id === track.id);
+            const moods = track.mood ? track.mood.split(',').map(m => m.trim()) : [];
+
+            html += `
+                <div class="track-card" style="animation-delay: ${i * 0.05}s" id="card-${track.id}">
+                    <div class="track-header">
+                        <div>
+                            <div class="track-title">${escapeHtml(track.title)}</div>
+                            <div class="track-artist">${escapeHtml(track.artist)}</div>
+                        </div>
+                        <span class="similarity-badge ${simClass}">${track.similarity}%</span>
+                    </div>
+
+                    <div class="track-meta">
+                        <span class="meta-tag genre">${escapeHtml(track.genre)}</span>
+                        ${track.year ? `<span class="meta-tag year">${escapeHtml(track.year)}</span>` : ''}
+                        ${moods.slice(0, 2).map(m => `<span class="meta-tag">${escapeHtml(m)}</span>`).join('')}
+                    </div>
+
+                    ${track.insights && track.insights.length > 0 ? `
+                        <div class="ai-insight">
+                            <span class="insight-label">✨ Match Insight</span>
+                            <div class="insight-chips">
+                                ${track.insights.map(i => `<span class="insight-chip">${escapeHtml(i)}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <p class="track-description">${escapeHtml(track.description)}</p>
+
+                    <div class="card-actions">
+                        <button class="action-btn play-btn" onclick="playTrack('${track.id}')">
+                            ▶️ Play
+                        </button>
+                        <button class="action-btn primary" onclick="findSimilar('${track.id}', '${escapeHtml(track.title)}')">
+                            🔗 Similar
+                        </button>
+                        <button class="action-btn add-to-playlist ${inPlaylist ? 'added' : ''}"
+                                id="playlist-btn-${track.id}"
+                                onclick="toggleTrackInPlaylist('${track.id}')">
+                            ${inPlaylist ? '✅ Added' : '➕ Playlist'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        area.innerHTML = html;
+    }
+
+    // ── Find similar tracks ───────────────────────────────────────────────
+    async function findSimilar(trackId, trackTitle) {
+        const area = document.getElementById('resultsArea');
+
+        // Add loading below current results
+        area.innerHTML += `
+            <div class="similar-section" id="similarSection">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Finding tracks similar to "${trackTitle}"...</p>
+                </div>
+            </div>
+        `;
+
+        // Scroll to loading
+        document.getElementById('similarSection').scrollIntoView({ behavior: 'smooth' });
+
+        try {
+            const res = await fetch(`/api/similar/${trackId}?top_k=6`);
+            const data = await res.json();
+
+            if (data.results && data.results.length > 0) {
+                const simResults = data.results;
+                const srcTrack = data.source_track;
+
+                // Re-render everything
+                renderResults(currentResults, document.getElementById('searchInput').value);
+
+                // Add similar section
+                const simArea = document.createElement('div');
+                simArea.className = 'similar-section';
+                simArea.id = 'similarSection';
+
+                let simHtml = `
+                    <div class="section-header">
+                        <h2><span>🔗</span> Similar to <span class="query-text">"${escapeHtml(srcTrack.title)}"</span></h2>
+                        <span class="result-count">${simResults.length} tracks</span>
+                    </div>
+                    <div class="results-grid">
+                `;
+
+                simResults.forEach((track, i) => {
+                    const simClass = track.similarity >= 70 ? 'high' : track.similarity >= 40 ? 'medium' : 'low';
+                    const inPlaylist = playlist.some(p => p.id === track.id);
+                    const moods = track.mood ? track.mood.split(',').map(m => m.trim()) : [];
+
+                    simHtml += `
+                        <div class="track-card" style="animation-delay: ${i * 0.05}s">
+                            <div class="track-header">
+                                <div>
+                                    <div class="track-title">${escapeHtml(track.title)}</div>
+                                    <div class="track-artist">${escapeHtml(track.artist)}</div>
+                                </div>
+                                <span class="similarity-badge ${simClass}">${track.similarity}%</span>
+                            </div>
+                            <div class="track-meta">
+                                <span class="meta-tag genre">${escapeHtml(track.genre)}</span>
+                                ${track.year ? `<span class="meta-tag year">${escapeHtml(track.year)}</span>` : ''}
+                                ${moods.slice(0, 3).map(m => `<span class="meta-tag">${escapeHtml(m)}</span>`).join('')}
+                            </div>
+                            <p class="track-description">${escapeHtml(track.description)}</p>
+                            <div class="card-actions">
+                                <button class="action-btn play-btn" onclick="playTrack('${track.id}')">
+                                    ▶️ Play
+                                </button>
+                                <button class="action-btn primary" onclick="findSimilar('${track.id}', '${escapeHtml(track.title)}')">
+                                    🔗 Similar
+                                </button>
+                                <button class="action-btn add-to-playlist ${inPlaylist ? 'added' : ''}"
+                                        id="playlist-btn-${track.id}"
+                                        onclick="toggleTrackInPlaylist('${track.id}')">
+                                    ${inPlaylist ? '✅ Added' : '➕ Playlist'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                simHtml += '</div>';
+                simArea.innerHTML = simHtml;
+                document.getElementById('resultsArea').appendChild(simArea);
+
+                simArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (e) {
+            console.error('Similar search error:', e);
+            showToast('Failed to find similar tracks');
+        }
+    }
+
+    // ── Playlist Management ───────────────────────────────────────────────
+    function toggleTrackInPlaylist(trackId) {
+        const existingIdx = playlist.findIndex(p => p.id === trackId);
+
+        if (existingIdx >= 0) {
+            // Remove
+            playlist.splice(existingIdx, 1);
+            showToast('Removed from playlist');
+        } else {
+            // Find track data
+            const allTracks = [...currentResults];
+            const track = allTracks.find(t => t.id === trackId);
+            if (track) {
+                playlist.push(track);
+                showToast(`Added "${track.title}" to playlist`);
+            }
+        }
+
+        updatePlaylistUI();
+        updatePlaylistButtons();
+    }
+
+    function updatePlaylistButtons() {
+        // Update all visible playlist buttons
+        document.querySelectorAll('.add-to-playlist').forEach(btn => {
+            const trackId = btn.id.replace('playlist-btn-', '');
+            const inPlaylist = playlist.some(p => p.id === trackId);
+            btn.className = `action-btn add-to-playlist ${inPlaylist ? 'added' : ''}`;
+            btn.innerHTML = inPlaylist ? '✅ Added' : '➕ Playlist';
+        });
+    }
+
+    function updatePlaylistUI() {
+        const countEl = document.getElementById('playlistCount');
+        const badgeEl = document.getElementById('playlistBadge');
+        const tracksEl = document.getElementById('playlistTracks');
+        const emptyEl = document.getElementById('playlistEmpty');
+
+        countEl.textContent = playlist.length;
+        badgeEl.textContent = playlist.length > 0 ? playlist.length : '';
+
+        if (playlist.length === 0) {
+            tracksEl.innerHTML = `
+                <div class="playlist-empty">
+                    <div class="empty-icon">🎧</div>
+                    <p>Your playlist is empty.<br>Add tracks from the search results!</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        playlist.forEach((track, i) => {
+            html += `
+                <div class="playlist-item" onclick="playTrack('${track.id}')">
+                    <span class="p-number">${i + 1}</span>
+                    <div class="p-info">
+                        <div class="p-title">${escapeHtml(track.title)}</div>
+                        <div class="p-artist">${escapeHtml(track.artist)}</div>
+                    </div>
+                    <button class="p-remove" onclick="removeFromPlaylist(event, ${i})">✕</button>
+                </div>
+            `;
+        });
+
+        tracksEl.innerHTML = html;
+    }
+
+    function removeFromPlaylist(index) {
+        const track = playlist[index];
+        playlist.splice(index, 1);
+        updatePlaylistUI();
+        updatePlaylistButtons();
+        showToast(`Removed "${track.title}"`);
+    }
+
+    function clearPlaylist() {
+        playlist = [];
+        updatePlaylistUI();
+        updatePlaylistButtons();
+        showToast('Playlist cleared');
+    }
+
+    function togglePlaylist() {
+        const panel = document.getElementById('playlistPanel');
+        const overlay = document.getElementById('overlay');
+        panel.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    // ── Audio Player Logic ────────────────────────────────────────────────
+    let currentTrack = null;
+    let isPlaying = false;
+    const audio = document.getElementById('mainAudio');
+    const playerBar = document.getElementById('audioPlayerBar');
+
+    function playTrack(trackId) {
+        // Find track in current results or playlist
+        const allTracks = [...currentResults, ...playlist];
+        const track = allTracks.find(t => t.id === trackId);
+        
+        if (!track) return;
+        if (!track.preview_url) {
+            showToast(`"${track.title}" has no audio preview available yet.`);
+            return;
+        }
+
+        if (currentTrack && currentTrack.id === trackId && audio.src) {
+            togglePlayback();
+            return;
+        }
+
+        currentTrack = track;
+        audio.src = track.preview_url;
+        audio.play();
+        isPlaying = true;
+        
+        updatePlayerUI();
+        playerBar.classList.add('visible');
+        showToast(`Now playing: ${track.title}`);
+    }
+
+    function togglePlayback() {
+        if (!audio.src) return;
+        
+        if (isPlaying) {
+            audio.pause();
+            isPlaying = false;
+        } else {
+            audio.play();
+            isPlaying = true;
+        }
+        updatePlayerUI();
+    }
+
+    function updatePlayerUI() {
+        const playPauseBtn = document.getElementById('mainPlayPauseBtn');
+        playPauseBtn.textContent = isPlaying ? '⏸️' : '▶️';
+        
+        if (currentTrack) {
+            document.getElementById('playerTitle').textContent = currentTrack.title;
+            document.getElementById('playerArtist').textContent = currentTrack.artist;
+        }
+    }
+
+    function updateProgress() {
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        
+        if (audio.duration) {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = `${percent}%`;
+            
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            durationEl.textContent = formatTime(audio.duration);
+        }
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function seek(event) {
+        const bar = document.getElementById('progressBar');
+        const percent = event.offsetX / bar.offsetWidth;
+        audio.currentTime = percent * audio.duration;
+    }
+
+    function playNext() {
+        if (playlist.length === 0) return;
+        const currentIdx = playlist.findIndex(p => p.id === (currentTrack ? currentTrack.id : null));
+        const nextIdx = (currentIdx + 1) % playlist.length;
+        playTrack(playlist[nextIdx].id);
+    }
+
+    function playPrevious() {
+        if (playlist.length === 0) return;
+        const currentIdx = playlist.findIndex(p => p.id === (currentTrack ? currentTrack.id : null));
+        const prevIdx = (currentIdx - 1 + playlist.length) % playlist.length;
+        playTrack(playlist[prevIdx].id);
+    }
+
+    function removeFromPlaylist(event, index) {
+        event.stopPropagation();
+        const track = playlist[index];
+        playlist.splice(index, 1);
+        updatePlaylistUI();
+        updatePlaylistButtons();
+        showToast(`Removed "${track.title}"`);
+    }
+
+    // ── Toast notification ────────────────────────────────────────────────
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ── Utils ─────────────────────────────────────────────────────────────
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+</body>
+</html>
